@@ -1,0 +1,29 @@
+{
+  "name": "messenger-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "TuanLM",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon --exec babel-node index.js",
+    "start": "babel-node index.js",
+    "build": "babel index.js — out-file index-compiled.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "firebase-admin": "^11.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.5.2",
+    "nodemon": "^2.0.19",
+    "socket.io": "^4.5.1",
+    "swagger-ui-express": "^4.5.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.10",
+    "@babel/node": "^7.18.10",
+    "@babel/preset-env": "^7.18.10"
+  }
+}
