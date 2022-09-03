@@ -17,7 +17,8 @@ const port = process.env.PORT || 3000
 app.use(cors())
 app.use(express.static('docs'))
 app.use('/api-docs', serve, setup(swaggerConfig, {explorer: true}))
-app.use(authMiddleware.verifyJwtToken)
+app.use(express.json())
+app.use(authMiddleware.jwtMiddleware)
 
 mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true})
   .then(() => console.log('Connect DB successfully !!!'))

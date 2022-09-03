@@ -1,15 +1,28 @@
+import axios from '../axios'
 import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    name: null
+    name: '',
+    email: '',
+    avatar: '',
+    token: ''
   }),
   getters: {
     //TODO
   },
   actions: {
-    login() {
-      //TODO
+    async login(firebaseToken) {
+      const url = `/auth/login`
+      const body = {
+        firebaseToken: firebaseToken
+      }
+
+      const res = await axios.post(url, body)
+
+      if (res.status === 200) {
+        sessionStorage.setItem('user', JSON.stringify(res.data))
+      }
     }
   }
 })

@@ -8,26 +8,54 @@
         </div>
       </template>
       <div class="flex">
-        <el-input v-model="username" size="large" placeholder="Input your name" style="margin-bottom: 10px;"/>
-        <el-button @click="handleClick" color="#626aef" class="button" size="large" plain>Go to chat</el-button>
+        <el-input v-model="email" size="large" placeholder="Gmail ..." style="margin-bottom: 10px;"/>
+        <el-input v-model="password" size="large" placeholder="Password ..." style="margin-bottom: 10px;" show-password/>
+        <el-button :icon="UserFilled" @click="handleClick" color="#626aef" class="button" size="large" plain>Go to chat</el-button>
+        <el-divider content-position="center">Or</el-divider>
+        <el-button :icon="Message" @click="googleLoginPopup" color="#626aef" class="button" size="large" plain>
+          With Google
+        </el-button>
       </div>
     </el-card>
   </div>
 </template>
 <script setup>
-import { ElMessage } from 'element-plus';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { useUserStore } from '../stores/user'
+import { Message, UserFilled } from '@element-plus/icons-vue';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, getAuth } from 'firebase/auth'
 
-const username = ref('')
+const email = ref('')
+const password = ref('')
 const router = useRouter()
 
-const handleClick = () => {
-  if (username.value) {
-    router.push({name: 'Home', params: {name: username.value}})
+const handleClick = async () => {
+  console.log(email.value, password.value)
+  if (email.value && password.value) {
+    const res = signInWithEmailAndPassword(getAuth(), email.value, password.value)
+    console.log(res.user)
+    ElMessage.success('Login OK')
   } else {
     ElMessage.error('You must input your name !!!')
   }
+}
+
+const googleLoginPopup = async () => {
+  signInWithPopup(getAuth(), new GoogleAuthProvider()).then(async res => {
+    const idToken =  await res.user.getIdToken(true)
+    try {
+      await useUserStore().login(idToken)
+      router.push({name: 'Home'})
+      ElMessage.success('OK')
+    } catch (e) {
+      ElMessage.error('The user is invalid !!!')
+      console.error(e)
+    }
+  }).catch(err => {
+    console.log(err)
+  })
 }
 
 </script>

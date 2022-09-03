@@ -1,7 +1,7 @@
 import {sign, verify} from 'jsonwebtoken'
 
-const privateKey = process.env.TOKEN_KEY
-const expiresIn = process.env.TOKEN_EXPIRES
+const privateKey = 'wJPGpSvuWwB.oUtbaL2fE1Q5eQYn3v4JBtXocfvOW'
+const expiresIn = '10h'
 
 module.exports = {
   createToken: (data) => {

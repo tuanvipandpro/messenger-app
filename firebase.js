@@ -8,10 +8,8 @@ initializeApp(
   {credential: credential.cert(config)}
 )
 
-const validateIdToken = (idToken) => {
-  getAuth().verifyIdToken(idToken).then(res => {
-    console.log(res)
-    return res
-  }).catch(e => console.error(e))
+const validateIdToken = async (idToken) => {
+  const decodeToken = await getAuth().verifyIdToken(idToken)
+  return decodeToken
 }
 module.exports = { validateIdToken }

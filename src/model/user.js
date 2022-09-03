@@ -13,6 +13,10 @@ const userSchema = Schema({
     type: String,
     require: true
   },
+  isDisable: {
+    type: Boolean,
+    require: true
+  }
 })
 
 module.exports = model('user', userSchema, 'user')

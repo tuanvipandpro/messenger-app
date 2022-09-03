@@ -11,12 +11,13 @@
   },
   "host": "localhost:3001",
   "basePath": "/",
-  "tags": [
-    {
-      "name": "Users",
-      "description": "API for users in the system"
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "Header"
     }
-  ],
+  },
   "schemes": ["http"],
   "consumes": ["application/json"],
   "produces": ["application/json"],
@@ -25,7 +26,20 @@
       "post": {
         "tags": ["User"],
         "summary": "Validate firebase token and return app token.",
-        "response": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "firebaseToken",
+            "schema": {
+              "type": "object",
+              "required":["firebaseToken"],
+              "properties": {
+                "firebaseToken": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
           "200": {
             "description": "OK",
             "schema": {
@@ -33,6 +47,46 @@
             }
           }
         }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "security": [
+          {"Bearer": []}
+        ],
+        "tags": ["User"],
+        "summary": "Get available user",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pageNum",
+            "description": "The total data in page.",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "in": "query",
+            "name": "pageNo",
+            "description": "The current page is selected.",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "responses":{
+          "200": {"description": "OK"}
+        }     
+      }
+    },
+    "/api/room": {
+      "post": {
+        "security": [
+          {"Bearer": []}
+        ],
+        "tags": ["Room"],
+        "summary": "Create Room",
+        "responses":{
+          "200": {"description": "OK"}
+        }     
       }
     }
   },

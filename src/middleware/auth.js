@@ -1,7 +1,7 @@
 import jwtUtils from '../utils/jwtUtils'
 
 const verifyJwtToken = (req, res, next) => {
-  const token = req.headers['Authorization']
+  const token = req.header('Authorization')
 
   if (!token) {
     res.status(403).json({status: 403, msg: 'A token is required for authentication !!!'})
@@ -17,6 +17,17 @@ const verifyJwtToken = (req, res, next) => {
   }
 }
 
+const jwtMiddleware = (req, res, next) => {
+  const url = req.url
+
+  if (url.startsWith('/api/')) {
+    verifyJwtToken(req, res, next)
+  } else {
+    next()
+  }
+
+}
+
 module.exports = {
-  verifyJwtToken
+  jwtMiddleware
 }
