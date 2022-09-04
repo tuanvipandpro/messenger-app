@@ -77,17 +77,75 @@
         }     
       }
     },
-    "/api/room": {
+    "/api/chatRoom": {
       "post": {
         "security": [
           {"Bearer": []}
         ],
         "tags": ["Room"],
-        "summary": "Create Room",
+        "summary": "Get single room for chat (create if not exist)",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "users",
+            "description": "List user (email) in single room",
+            "required": true,
+            "schema":{
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        ],
         "responses":{
           "200": {"description": "OK"}
         }     
       }
+    },
+    "/api/chats": {
+      "get": {
+        "security": [
+          {"Bearer": []}
+        ],
+        "tags": ["Chat"],
+        "summary": "Get Chat By Room Id",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "roomId",
+            "description": "Get chat list by room id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses":{
+          "200": {"description": "OK"}
+        }     
+      },
+      "post": {
+        "security": [
+          {"Bearer": []}
+        ],
+        "tags": ["Chat"],
+        "summary": "Create chat for a user in room",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "roomId",
+            "description": "Get chat list by room id",
+            "required": true,
+            "schema":{
+              "type": "object",
+              "properties":{
+                "roomId": {"type": "string"},
+                "text": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses":{
+          "200": {"description": "OK"}
+        }     
+      }         
     }
   },
   "definitions": {

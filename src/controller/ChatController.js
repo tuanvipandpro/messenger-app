@@ -2,12 +2,12 @@ import chatModel from '../model/chat'
 import { Schema } from 'mongoose'
 
 module.exports = {
-  createChat: (req, res) => {
+  createChatForUserInRoom: (req, res) => {
     const chatObj = {
       text: req.body.text,
       createdAt: new Date(),
-      roomId: Schema.Types.ObjectId(req.body.roomId),
-      user: req.body.user
+      roomId: req.body.roomId,
+      user: req.user
     }
 
     new chatModel(chatObj).save()
@@ -18,9 +18,9 @@ module.exports = {
       console.error(err)
       res.status(500).json({error : e, msg: 'Something error !!!'})
     })
-    res.status(200)
+
   },
-  getChatbyRoomId: (req, res) => {
+  getChatsByRoomId: (req, res) => {
     const filter = {roomId: req.query.roomId}
 
     const sort = {

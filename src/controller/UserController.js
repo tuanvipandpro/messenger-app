@@ -1,10 +1,7 @@
 import userModel from '../model/user'
 import firebase from '../../firebase'
 import { createToken } from '../utils/jwtUtils'
-
-const checkEmptyObject = (o) => {
-  return (o && Object.keys(o).length === 0 && Object.getPrototypeOf(o) === Object.prototype)
-}
+import { checkEmptyObject } from '../utils/commonUtils'
 
 module.exports = {
   loginWithFirebaseToken: async (req, res) => {
@@ -49,11 +46,16 @@ module.exports = {
 
   },
   getUserAvailable: async (req, res) => {
-    const pageNum = req.query.pageNum // limit = pageNo
+    const pageNum = req.query.pageNum // limit = pageNum
     const pageNo = req.query.pageNo // skip = pageNum * (pageNo - 1)
+
+    if (pageNo <= 0 || pageNum <= 0) {
+      res.status(400).json({msg: 'Params is not invalid !!!'})
+    }
+
     try {
       const count = await userModel.count({isDisable: false})
-      const data = await userModel.find({isDisable: false}).skip(pageNum * (pageNo - 1)).limit(pageNo)
+      const data = await userModel.find({isDisable: false}).skip(pageNum * (pageNo - 1)).limit(pageNum)
       res.status(200).json({
         pageNo: pageNo,
         pageNum: pageNum,

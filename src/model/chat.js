@@ -10,11 +10,10 @@ const chatSchema = Schema({
     require: true
   },
   roomId: {
-    type: Schema.Types.ObjectId,
+    type: String,
     require: true
   },
   user: {
-    _id: Schema.Types.ObjectId,
     email: {
       type: String,
       require: true

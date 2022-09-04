@@ -15,7 +15,7 @@ dotenv.config()
 const port = process.env.PORT || 3000
 
 app.use(cors())
-app.use(express.static('docs'))
+app.use('/', express.static('public'))
 app.use('/api-docs', serve, setup(swaggerConfig, {explorer: true}))
 app.use(express.json())
 app.use(authMiddleware.jwtMiddleware)
@@ -30,5 +30,5 @@ mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopo
 routes(app)
 
 socketConfig(app.listen(port, () => {
-  console.log(`Server start at : ${port}`)
+  console.log(`Server start in ${port} at ${new Date().toLocaleString()}`)
 }))

@@ -5,7 +5,12 @@ const roomSchema = Schema({
     type: Date,
     require: true
   },
-  listUser: [Schema.Types.ObjectId],
+  type: {
+    type: String,
+    require: true,
+    enum: ['SINGLE', 'MULTIPLE']
+  },
+  users: [String],
 })
 
 module.exports = model('room', roomSchema, 'room')
