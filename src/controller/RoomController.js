@@ -12,8 +12,8 @@ module.exports = {
       users: usersInRoom
     }
 
-    roomModel.findOne(filter).then(async (err, doc) => {
-      if (checkEmptyObject(doc)) {
+    roomModel.findOne(filter).then(async (doc, err) => {
+      if (!checkEmptyObject(doc)) {
         const singleRoom = {
           createdAt: new Date(),
           type: 'SINGLE',
@@ -22,7 +22,6 @@ module.exports = {
         const room = await new roomModel(singleRoom).save()
         res.status(200).json(room)
       } else {
-        console.log('not empty')
         res.status(200).json(doc)
       }
     }).catch(err => {

@@ -10,13 +10,13 @@ module.exports = {
       const payload = {
         email: tokenDecode.email,
         name: tokenDecode.name,
-        avatar: tokenDecode.picture
+        avatar: tokenDecode.picture,
       }
 
       const jwtToken = createToken(payload)
 
       userModel.findOne({email: tokenDecode.email}, (err, doc) => {
-        console.log(err, doc)
+        if (err) console.error(err)
 
         if (checkEmptyObject(doc)) {
           if (doc.isDisable) {
@@ -29,11 +29,10 @@ module.exports = {
             })
           }
         } else {
-          new userModel(payload).save().then(data => {
+          new userModel({isDisable: false , ...payload}).save().then(data => {
             res.status(200).json({
               token: jwtToken,
               oldUser: false,
-              isDisable: false,
               ...payload
             })
           })
@@ -60,7 +59,7 @@ module.exports = {
         pageNo: pageNo,
         pageNum: pageNum,
         count: count,
-        data: data
+        data: data.filter(e => e.email != req.user.email)
       })
     } catch(e) {
       console.error(e)

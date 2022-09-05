@@ -3,23 +3,29 @@
     <el-container>
       <el-aside class="max-height userboard">
         <Userbox v-for="(userbox ,i) in userBoard" :key="i" 
-                :username="userbox.username"
-                :last-message="userbox.lastMessage"
-                :chatting="userbox.isChatting" 
+                :name="userbox.name"
+                :hidden-badge="!userbox.newChat"
+                :avatar="userbox.avatar"
+                :chatting="userbox.chatting"
+                :last-message="userbox.email"
                 @click="chooseMsgBox(userbox)"/>
       </el-aside>
       <el-main class="main">
         <el-card shadow="never">
           <template #header>
             <div style="display: flex; align-items: center;">
-              <el-avatar :size="28" icon="Avatar" />
-              <strong style="margin-left: 6px;">David</strong>
+              <el-avatar :size="30" :src="toUser.avatar" />
+              <strong style="margin-left: 6px;">{{toUser.name}}</strong>
             </div>
           </template>          
           <div style="height: 74vh; overflow-y: auto;">
             <template v-for="(msg, index) in msgBoard" :key="index">
-              <div v-if="!msg.isYou" class="msgbox"> {{msg.message}}</div>
-              <div v-else class="msgbox isRight">{{msg.message}}</div>
+              <div v-if="!msg.isYou" class="msgbox"> 
+                {{msg.text}}
+              </div>
+              <div v-else class="msgbox isRight">
+                {{msg.text}}
+              </div>
             </template>
           </div>
         </el-card>
@@ -33,10 +39,11 @@
       </el-main>
     </el-container>
   </div>
-  <!-- <h1>{{ `Hello ${username}` }}</h1> -->
 </template>
 <script>
-import { reactive, ref } from "vue";
+import { onBeforeMount, reactive, ref } from "vue";
+import { useChatterStore } from '../stores/chatters'
+import { useRoomStore } from '../stores/room'
 import { useRoute } from "vue-router";
 import Userbox from "../components/Userbox.vue";
 import { io } from 'socket.io-client'
@@ -48,23 +55,26 @@ export default {
 
   setup() {
     const route = useRoute();
-    const username = reactive(route.params.name);
-
-    const userBoard = ref([
-      {userId: 1, username: 'David', lastMessage:'What is your name ?', isChatting: true},
-      {userId: 2, username: 'Ronaldo', lastMessage:'How old are you ?'}
-    ])
-
-    const msgBoard = ref([
-      {username: 'David', message:'How old are you ?', isYou: false},
-      {username: 'Tuan', message:'Fine, thanks !', isYou: true},
-    ])
-
+    const chatterStore = useChatterStore()
+    const roomStore = useRoomStore()
+    const userBoard = ref([])
+    const msgBoard = ref([])
     const chatData = ref('')
+    const toUser = ref({})
+    const currentUser = JSON.parse(sessionStorage.getItem('user'))
+    
+    let room = {}
 
-    const sendMsg = () => {
-      msgBoard.value.push({username: 'Tuan', message: chatData.value, isYou: true})
-      chatData.value = ''
+    const sendMsg = async () => {
+      try {
+        const res = await chatterStore.createChatForUserInRoom(room._id, chatData.value)
+        console.log(res)
+        msgBoard.value.push({isYou: true, ...res})
+      } catch(e) {
+        console.error(e)
+      } finally {
+        chatData.value =''
+      }
     }
 
     const handleEnter = (e) => {
@@ -73,21 +83,39 @@ export default {
 
     const chooseMsgBox = (userbox) => {
       userBoard.value.map(userMsg => {
-        userMsg.isChatting = (userbox.userId === userMsg.userId)
+        userMsg.chatting = (userbox.email === userMsg.email)
         return userMsg
       })
     }
 
-    const socket = io()
+    const endpoint = "http://localhost:3001"
+    const socket = io(endpoint)
 
+    socket.on('online', id => {})
+    socket.on('offline', id => {})
     socket.on('newMsg', data => {})
-    socket.emit('sendMsg', {})
+
+    onBeforeMount(async () => {
+      const users = await chatterStore.getAvailableUser()
+      if (users) {
+        userBoard.value = users
+        toUser.value = users[0]
+        room = await roomStore.getOpenChat([currentUser.email, userBoard.value[0].email])
+        const chatInRoom = await chatterStore.getChatByRoomId(room._id)
+        msgBoard.value = chatInRoom.map(e => {
+          return {
+            isYou: e.user.email === currentUser.email,
+            ...e
+          }
+        })
+      }
+    })
 
     return {
-      username,
       chatData,
       msgBoard,
       userBoard,
+      toUser,
       sendMsg,
       handleEnter,
       chooseMsgBox

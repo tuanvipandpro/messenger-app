@@ -21,6 +21,7 @@ export const useUserStore = defineStore('user', {
       const res = await axios.post(url, body)
 
       if (res.status === 200) {
+        axios.defaults.headers.common.Authorization = res.data.token
         sessionStorage.setItem('user', JSON.stringify(res.data))
       }
     }

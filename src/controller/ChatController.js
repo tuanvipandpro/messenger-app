@@ -3,6 +3,8 @@ import { Schema } from 'mongoose'
 
 module.exports = {
   createChatForUserInRoom: (req, res) => {
+    console.log(req.body)
+
     const chatObj = {
       text: req.body.text,
       createdAt: new Date(),
@@ -24,7 +26,7 @@ module.exports = {
     const filter = {roomId: req.query.roomId}
 
     const sort = {
-      createdAt: -1
+      createdAt: 1
     }
 
     chatModel.find(filter).sort(sort).then(response => {
