@@ -9,7 +9,9 @@ module.exports = {
   openRoomForSingleChat: async (req, res) => {
     const usersInRoom = req.body // array of email user in room
     const filter = {
-      users: usersInRoom
+      users: {
+        $all: usersInRoom
+      }
     }
 
     roomModel.findOne(filter).then(async (doc, err) => {
