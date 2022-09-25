@@ -2,37 +2,46 @@
   <div class="common-layout max-height">
     <el-container>
       <el-aside class="max-height userboard">
-        <Userbox v-for="(userbox ,i) in userBoard" :key="i" 
-                :name="userbox.name"
-                :hidden-badge="!userbox.newChat"
-                :avatar="userbox.avatar"
-                :chatting="userbox.chatting"
-                :last-message="userbox.email"
-                @click="chooseMsgBox(userbox)"/>
+        <!-- https://placeimg.com/140/140/any -->
+        <Userbox
+          v-for="(userbox, i) in userBoard"
+          :key="i"
+          :name="userbox.name"
+          :hidden-badge="!userbox.newChat"
+          :avatar="userbox.avatar"
+          :chatting="userbox.chatting"
+          :last-message="userbox.email"
+          @click="chooseMsgBox(userbox)"
+        />
       </el-aside>
-      <el-main class="main">
+      <el-main class="main" v-loading="loading">
         <el-card shadow="never">
           <template #header>
-            <div style="display: flex; align-items: center;">
-              <el-avatar :size="30" :src="toUser.avatar" />
-              <strong style="margin-left: 6px;">{{toUser.name}}</strong>
+            <div style="display: flex; align-items: center">
+              <el-avatar :size="30" :src="toUser.avatar"/>
+              <strong style="margin-left: 6px">{{ toUser.name }}</strong>
             </div>
-          </template>          
-          <div style="height: 74vh; overflow-y: auto;">
-            <template v-for="(msg, index) in msgBoard" :key="index">
-              <div v-if="!msg.isYou" class="msgbox"> 
-                {{msg.text}}
+          </template>
+          <div style="height: 74vh; overflow-y: auto">
+            <template v-for="(msg, index) in msgBoard">
+              <div v-if="!msg.isYou" class="msgbox" :key="index">
+                {{ msg.text }}
               </div>
-              <div v-else class="msgbox isRight">
-                {{msg.text}}
+              <div v-else class="msgbox isRight" :key="index + 1">
+                {{ msg.text }}
               </div>
             </template>
           </div>
         </el-card>
-        <div style="margin-top: 0.5vh;">
-          <el-input @keypress="handleEnter" v-model="chatData" size="large" placeholder="Please input ...">
+        <div style="margin-top: 0.5vh">
+          <el-input
+            @keypress="handleEnter"
+            v-model="chatData"
+            size="large"
+            placeholder="Please input ..."
+          >
             <template #prepend>
-              <el-button icon="Position" @click="sendMsg"/>
+              <el-button icon="Position" @click="sendMsg" />
             </template>
           </el-input>
         </div>
@@ -41,12 +50,12 @@
   </div>
 </template>
 <script>
-import { onBeforeMount, reactive, ref } from "vue";
-import { useChatterStore } from '../stores/chatters'
-import { useRoomStore } from '../stores/room'
+import { onBeforeMount, ref } from "vue";
+import { useChatterStore } from "../stores/chatters";
+import { useRoomStore } from "../stores/room";
 import { useRoute } from "vue-router";
 import Userbox from "../components/Userbox.vue";
-import { io } from 'socket.io-client'
+import { io } from "socket.io-client";
 
 export default {
   components: {
@@ -55,77 +64,98 @@ export default {
 
   setup() {
     const route = useRoute();
-    const chatterStore = useChatterStore()
-    const roomStore = useRoomStore()
-    const userBoard = ref([])
-    const msgBoard = ref([])
-    const chatData = ref('')
-    const toUser = ref({})
-    const currentUser = JSON.parse(sessionStorage.getItem('user'))
-    
-    let room = {}
+    const chatterStore = useChatterStore();
+    const roomStore = useRoomStore();
+    const userBoard = ref([]);
+    const msgBoard = ref([]);
+    const chatData = ref("");
+    const toUser = ref({});
+    const loading = ref(false);
+    const currentUser = JSON.parse(sessionStorage.getItem("user"));
+
+    let room = {};
 
     const sendMsg = async () => {
       try {
-        const res = await chatterStore.createChatForUserInRoom(room._id, chatData.value)
-        console.log(res)
-        msgBoard.value.push({isYou: true, ...res})
-      } catch(e) {
-        console.error(e)
+        const res = await chatterStore.createChatForUserInRoom(
+          room._id,
+          chatData.value
+        );
+        msgBoard.value.push({ isYou: true, ...res });
+        socket.emit('sendMsg', {chat: res, to: toUser.value.email, room: room._id})
+      } catch (e) {
+        console.error(e);
       } finally {
-        chatData.value =''
+        chatData.value = "";
       }
-    }
+    };
 
     const handleEnter = (e) => {
-      if (e.keyCode === 13) sendMsg()
-    }
+      if (e.keyCode === 13) sendMsg();
+    };
 
-    const chooseMsgBox = (userbox) => {
-      userBoard.value.map(userMsg => {
-        userMsg.chatting = (userbox.email === userMsg.email)
-        return userMsg
-      })
-    }
+    const endpoint = "http://localhost:3001";
+    const socket = io(endpoint);
 
-    const endpoint = "http://localhost:3001"
-    const socket = io(endpoint)
+    socket.on("online", (id) => {
+      
+    });
+    socket.on("offline", (id) => {
 
-    socket.on('online', id => {})
-    socket.on('offline', id => {})
-    socket.on('newMsg', data => {})
+    });
+    socket.on("newMsg", (data) => {
+      if (data.room === room._id && currentUser.email !== data.chat.user.email) {
+        msgBoard.value.push(data.chat);
+      }
+    });
+
+    const getChatData = async () => {
+      loading.value = true
+      room = await roomStore.getOpenChat([currentUser.email, toUser.value.email]);
+      const chatInRoom = await chatterStore.getChatByRoomId(room._id);
+      msgBoard.value = chatInRoom.map((e) => {
+        return {
+          isYou: e.user.email === currentUser.email,
+          ...e,
+        };
+      });
+      loading.value = false
+    };
+
+    const chooseMsgBox = async (userbox) => {
+      toUser.value = userbox;
+      userBoard.value.map((userMsg, index) => {
+        userMsg.chatting = userbox.email === userMsg.email;
+        return userMsg;
+      });
+      await getChatData();
+    };
 
     onBeforeMount(async () => {
-      const users = await chatterStore.getAvailableUser()
+      const users = await chatterStore.getAvailableUser();
       if (users) {
-        userBoard.value = users
-        toUser.value = users[0]
-        room = await roomStore.getOpenChat([currentUser.email, userBoard.value[0].email])
-        const chatInRoom = await chatterStore.getChatByRoomId(room._id)
-        msgBoard.value = chatInRoom.map(e => {
-          return {
-            isYou: e.user.email === currentUser.email,
-            ...e
-          }
-        })
+        userBoard.value = users;
+        toUser.value = users[0];
+        await getChatData()
       }
-    })
+    });
 
     return {
       chatData,
       msgBoard,
       userBoard,
       toUser,
+      loading,
       sendMsg,
       handleEnter,
-      chooseMsgBox
+      chooseMsgBox,
     };
   },
 };
 </script>
 
 <style scoped>
-.main{
+.main {
   padding: 5px;
 }
 .flex-board {
